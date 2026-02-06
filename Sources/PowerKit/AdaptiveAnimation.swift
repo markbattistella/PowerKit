@@ -22,8 +22,8 @@ public struct AdaptiveAnimation<V: Equatable>: ViewModifier {
     /// The animation to use during normal operation.
     public let normalAnimation: Animation
 
-    /// The animation to use during Low Power Mode.
-    public let reducedAnimation: Animation
+    /// The animation to use during Low Power Mode. Use `nil` to disable animation.
+    public let reducedAnimation: Animation?
 
     /// The value to animate.
     public let animatedValue: V
@@ -36,7 +36,7 @@ public struct AdaptiveAnimation<V: Equatable>: ViewModifier {
     ///   - value: The value to observe for animation triggers.
     public init(
         normalAnimation: Animation,
-        reducedAnimation: Animation,
+        reducedAnimation: Animation?,
         value: V
     ) {
         self.normalAnimation = normalAnimation
@@ -63,6 +63,7 @@ extension View {
     /// - Parameters:
     ///   - normal: The animation to use during normal operation. Defaults to `.spring()`.
     ///   - reduced: The animation to use during Low Power Mode. Defaults to `.linear(duration: 0.2)`.
+    ///     Pass `nil` to disable animation entirely.
     ///   - value: The value to observe for animation triggers.
     ///
     /// - Returns: A view with adaptive animation behaviour.
@@ -78,7 +79,7 @@ extension View {
     /// ```
     public func adaptiveAnimation<V: Equatable>(
         normal: Animation = .spring(),
-        reduced: Animation = .linear(duration: 0.2),
+        reduced: Animation? = .linear(duration: 0.2),
         value: V
     ) -> some View {
         modifier(AdaptiveAnimation(
