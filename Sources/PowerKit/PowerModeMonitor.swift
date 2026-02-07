@@ -25,18 +25,16 @@ import UIKit
 ///     var body: some Scene {
 ///         WindowGroup {
 ///             ContentView()
-///                 .environment(powerMonitor)
-///                 .environment(\.isLowPowerModeEnabled, powerMonitor.isLowPowerModeEnabled)
+///                 .powerKitEnvironment(powerMonitor)
 ///         }
 ///     }
 /// }
 /// ```
 ///
-/// The `.environment(powerMonitor)` line allows PowerKit's built-in modifiers
-/// (like ``AdaptiveAnimation`` and ``AdaptivePowerMode``) to read the monitor directly.
-/// The `.environment(\.isLowPowerModeEnabled, ...)` line bridges the value so that
-/// views using `@Environment(\.isLowPowerModeEnabled)` also receive updates.
-/// Alternatively, views can use `@Environment(PowerModeMonitor.self)` directly.
+/// The ``SwiftUICore/View/powerKitEnvironment(_:)`` modifier injects the monitor and bridges all
+/// properties as individual environment values. Views can then access values via
+/// `@Environment(PowerModeMonitor.self)` for the full monitor, or via key-path access
+/// like `@Environment(\.isLowPowerModeEnabled)` for individual properties.
 @MainActor
 @Observable
 public final class PowerModeMonitor {

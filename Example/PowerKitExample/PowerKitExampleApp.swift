@@ -14,8 +14,7 @@ struct PowerKitExample: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environment(powerMonitor)
-                .environment(\.isLowPowerModeEnabled, powerMonitor.isLowPowerModeEnabled)
+                .powerKitEnvironment(powerMonitor)
         }
     }
 }

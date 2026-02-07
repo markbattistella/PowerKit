@@ -5,6 +5,7 @@
 //
 
 import XCTest
+import SwiftUI
 @testable import PowerKit
 
 @MainActor
@@ -128,5 +129,43 @@ final class PowerKitTests: XCTestCase {
 
         monitor = nil
         XCTAssertNil(monitor, "Monitor should be deallocated")
+    }
+
+    // MARK: - Environment Key Default Values
+
+    func testEnvironmentKeyDefaults() {
+        let environment = EnvironmentValues()
+
+        // All keys should return safe defaults when not explicitly set
+        XCTAssertFalse(environment.isLowPowerModeEnabled)
+        XCTAssertEqual(environment.thermalState, .nominal)
+        XCTAssertFalse(environment.isLowBatteryState)
+        XCTAssertFalse(environment.shouldReducePerformance)
+    }
+
+    func testEnvironmentKeySettersAndGetters() {
+        var environment = EnvironmentValues()
+
+        environment.isLowPowerModeEnabled = true
+        XCTAssertTrue(environment.isLowPowerModeEnabled)
+
+        environment.thermalState = .serious
+        XCTAssertEqual(environment.thermalState, .serious)
+
+        environment.isLowBatteryState = true
+        XCTAssertTrue(environment.isLowBatteryState)
+
+        environment.shouldReducePerformance = true
+        XCTAssertTrue(environment.shouldReducePerformance)
+    }
+
+    func testEnvironmentKeyThermalStateAllValues() {
+        var environment = EnvironmentValues()
+
+        let states: [ProcessInfo.ThermalState] = [.nominal, .fair, .serious, .critical]
+        for state in states {
+            environment.thermalState = state
+            XCTAssertEqual(environment.thermalState, state)
+        }
     }
 }

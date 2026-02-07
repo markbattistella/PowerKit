@@ -52,29 +52,45 @@ struct MyApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environment(powerMonitor)
-                .environment(\.isLowPowerModeEnabled, powerMonitor.isLowPowerModeEnabled)
+                .powerKitEnvironment(powerMonitor)
         }
     }
 }
 ```
 
-The first line (`.environment(powerMonitor)`) injects the monitor for PowerKit's built-in modifiers like `adaptiveAnimation` and `adaptivePowerMode`.
+The `.powerKitEnvironment(_:)` modifier injects the monitor and bridges all its properties as individual environment values. This lets views access power state via `@Environment(PowerModeMonitor.self)` for the full monitor, or via key-path access like `@Environment(\.isLowPowerModeEnabled)` for individual values.
 
-The second line (`.environment(\.isLowPowerModeEnabled, ...)`) bridges the value so views using `@Environment(\.isLowPowerModeEnabled)` also receive live updates. If your views only use `@Environment(PowerModeMonitor.self)` directly, you can omit the second line.
+<details>
+<summary>Manual setup (if you only need specific values)</summary>
+
+You can also inject values individually:
+
+```swift
+ContentView()
+    .environment(powerMonitor)
+    .environment(\.isLowPowerModeEnabled, powerMonitor.isLowPowerModeEnabled)
+    .environment(\.thermalState, powerMonitor.thermalState)
+    .environment(\.isLowBatteryState, powerMonitor.isLowBatteryState)
+    .environment(\.shouldReducePerformance, powerMonitor.shouldReducePerformance)
+```
+
+</details>
 
 ### Check Power State
 
-Access Low Power Mode state in any view using the environment key (requires the bridge line shown in Basic Setup):
+Access individual power state values in any view using environment key-paths:
 
 ```swift
 struct ContentView: View {
     @Environment(\.isLowPowerModeEnabled) private var isLowPowerModeEnabled
+    @Environment(\.thermalState) private var thermalState
+    @Environment(\.isLowBatteryState) private var isLowBatteryState
+    @Environment(\.shouldReducePerformance) private var shouldReducePerformance
 
     var body: some View {
         VStack {
-            if isLowPowerModeEnabled {
-                Text("Low Power Mode Active")
+            if shouldReducePerformance {
+                Text("Reducing Performance")
             } else {
                 Text("Normal Mode")
             }
@@ -83,7 +99,7 @@ struct ContentView: View {
 }
 ```
 
-Alternatively, access the monitor directly (no bridge line needed):
+Alternatively, access the full monitor directly:
 
 ```swift
 struct ContentView: View {
@@ -91,8 +107,8 @@ struct ContentView: View {
 
     var body: some View {
         VStack {
-            if powerMonitor.isLowPowerModeEnabled {
-                Text("Low Power Mode Active")
+            if powerMonitor.shouldReducePerformance {
+                Text("Reducing Performance")
             } else {
                 Text("Normal Mode")
             }
@@ -275,6 +291,27 @@ The `PowerModeMonitor` provides access to:
 - `thermalState: ProcessInfo.ThermalState` - Current thermal state (nominal, fair, serious, critical)
 - `isLowBatteryState: Bool` - Whether battery is below 20% (iOS only)
 - `shouldReducePerformance: Bool` - Combined check for any power constraint
+
+### Environment Keys
+
+All monitor properties are available as SwiftUI environment values when using `.powerKitEnvironment(_:)`:
+
+| Environment Key Path | Type | Default |
+| --- | --- | --- |
+| `\.isLowPowerModeEnabled` | `Bool` | `false` |
+| `\.thermalState` | `ProcessInfo.ThermalState` | `.nominal` |
+| `\.isLowBatteryState` | `Bool` | `false` |
+| `\.shouldReducePerformance` | `Bool` | `false` |
+
+These can also be set manually without a monitor, which is useful for SwiftUI previews and testing:
+
+```swift
+#Preview("Low Power Mode") {
+    MyView()
+        .environment(\.isLowPowerModeEnabled, true)
+        .environment(\.thermalState, .serious)
+}
+```
 
 ### Thermal States
 
