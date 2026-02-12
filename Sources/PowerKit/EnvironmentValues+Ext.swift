@@ -6,24 +6,6 @@
 
 import SwiftUI
 
-// MARK: - Environment Keys
-
-private struct LowPowerModeKey: EnvironmentKey {
-    static let defaultValue = false
-}
-
-private struct ThermalStateKey: EnvironmentKey {
-    static let defaultValue: ProcessInfo.ThermalState = .nominal
-}
-
-private struct LowBatteryStateKey: EnvironmentKey {
-    static let defaultValue = false
-}
-
-private struct ShouldReducePerformanceKey: EnvironmentKey {
-    static let defaultValue = false
-}
-
 // MARK: - Environment Values
 
 extension EnvironmentValues {
@@ -45,10 +27,7 @@ extension EnvironmentValues {
     /// ```swift
     /// @Environment(\.isLowPowerModeEnabled) private var isLowPowerModeEnabled
     /// ```
-    public var isLowPowerModeEnabled: Bool {
-        get { self[LowPowerModeKey.self] }
-        set { self[LowPowerModeKey.self] = newValue }
-    }
+    @Entry public var isLowPowerModeEnabled: Bool = false
 
     /// The current thermal state of the device.
     ///
@@ -69,10 +48,7 @@ extension EnvironmentValues {
     /// ```swift
     /// @Environment(\.thermalState) private var thermalState
     /// ```
-    public var thermalState: ProcessInfo.ThermalState {
-        get { self[ThermalStateKey.self] }
-        set { self[ThermalStateKey.self] = newValue }
-    }
+    @Entry public var thermalState: ProcessInfo.ThermalState = .nominal
 
     /// Indicates whether the battery is in a low state (below 20%).
     ///
@@ -93,10 +69,7 @@ extension EnvironmentValues {
     /// ```swift
     /// @Environment(\.isLowBatteryState) private var isLowBatteryState
     /// ```
-    public var isLowBatteryState: Bool {
-        get { self[LowBatteryStateKey.self] }
-        set { self[LowBatteryStateKey.self] = newValue }
-    }
+    @Entry public var isLowBatteryState: Bool = false
 
     /// Indicates whether the app should reduce performance-intensive operations.
     ///
@@ -123,10 +96,7 @@ extension EnvironmentValues {
     /// ```swift
     /// @Environment(\.shouldReducePerformance) private var shouldReducePerformance
     /// ```
-    public var shouldReducePerformance: Bool {
-        get { self[ShouldReducePerformanceKey.self] }
-        set { self[ShouldReducePerformanceKey.self] = newValue }
-    }
+    @Entry public var shouldReducePerformance: Bool = false
 }
 
 // MARK: - Convenience View Extension
@@ -166,8 +136,7 @@ extension View {
     /// - Parameter monitor: The ``PowerModeMonitor`` instance to inject.
     /// - Returns: A view with the monitor and all power state values available in the environment.
     public func powerKitEnvironment(_ monitor: PowerModeMonitor) -> some View {
-        self
-            .environment(monitor)
+        self.environment(monitor)
             .environment(\.isLowPowerModeEnabled, monitor.isLowPowerModeEnabled)
             .environment(\.thermalState, monitor.thermalState)
             .environment(\.isLowBatteryState, monitor.isLowBatteryState)

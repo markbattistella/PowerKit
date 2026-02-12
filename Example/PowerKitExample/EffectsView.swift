@@ -43,18 +43,20 @@ struct EffectsView: View {
                                     .bold()
                             }
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .adaptivePowerMode(
-                                normalContent: {
-                                    Color.clear.background(.ultraThinMaterial)
-                                },
-                                reducedContent: {
-                                    #if os(iOS)
-                                    Color(.systemBackground).opacity(0.85)
-                                    #else
-                                    Color(.windowBackgroundColor).opacity(0.85)
-                                    #endif
-                                }
-                            )
+                            .background {
+                                AdaptivePowerContent(
+                                    normal: {
+                                        Color.clear.background(.ultraThinMaterial)
+                                    },
+                                    reduced: {
+                                        #if os(iOS)
+                                        Color(.systemBackground).opacity(0.85)
+                                        #else
+                                        Color(.windowBackgroundColor).opacity(0.85)
+                                        #endif
+                                    }
+                                )
+                            }
                         }
                         .frame(maxWidth: .infinity)
                         .frame(height: 150)

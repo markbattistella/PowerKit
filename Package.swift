@@ -14,11 +14,13 @@ let package = Package(
     products: [
         .library(name: "PowerKit", targets: ["PowerKit"]),
     ],
-    dependencies: [],
+    dependencies: [
+        .package(url: "https://github.com/markbattistella/SimpleLogger", from: "25.0.0")
+    ],
     targets: [
         .target(
             name: "PowerKit",
-            dependencies: [],
+            dependencies: ["SimpleLogger"],
             swiftSettings: [.enableExperimentalFeature("StrictConcurrency")]
         ),
         .testTarget(

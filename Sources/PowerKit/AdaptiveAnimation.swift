@@ -9,20 +9,24 @@ import SwiftUI
 /// A view modifier that adapts animations based on device power state.
 ///
 /// This modifier automatically switches between normal and reduced animations
-/// when Low Power Mode is enabled, helping preserve battery life.
+/// when the device is under power constraints (Low Power Mode, thermal pressure,
+/// or low battery), helping preserve battery life.
 public struct AdaptiveAnimation<V: Equatable>: ViewModifier {
 
-    @Environment(PowerModeMonitor.self) private var powerMonitor: PowerModeMonitor?
-    @Environment(\.isLowPowerModeEnabled) private var environmentIsLowPowerMode
+    @Environment(PowerModeMonitor.self)
+    private var powerMonitor: PowerModeMonitor?
 
-    private var isLowPowerModeEnabled: Bool {
-        powerMonitor?.isLowPowerModeEnabled ?? environmentIsLowPowerMode
+    @Environment(\.shouldReducePerformance)
+    private var environmentShouldReduce
+
+    private var shouldReducePerformance: Bool {
+        powerMonitor?.shouldReducePerformance ?? environmentShouldReduce
     }
 
     /// The animation to use during normal operation.
     public let normalAnimation: Animation
 
-    /// The animation to use during Low Power Mode. Use `nil` to disable animation.
+    /// The animation to use when performance should be reduced. Use `nil` to disable animation.
     public let reducedAnimation: Animation?
 
     /// The value to animate.
@@ -31,8 +35,8 @@ public struct AdaptiveAnimation<V: Equatable>: ViewModifier {
     /// Creates an adaptive animation modifier.
     ///
     /// - Parameters:
-    ///   - normalAnimation: The animation to use when Low Power Mode is disabled.
-    ///   - reducedAnimation: The animation to use when Low Power Mode is enabled.
+    ///   - normalAnimation: The animation to use under normal conditions.
+    ///   - reducedAnimation: The animation to use when performance should be reduced.
     ///   - value: The value to observe for animation triggers.
     public init(
         normalAnimation: Animation,
@@ -47,7 +51,7 @@ public struct AdaptiveAnimation<V: Equatable>: ViewModifier {
     public func body(content: Content) -> some View {
         content
             .animation(
-                isLowPowerModeEnabled ? reducedAnimation : normalAnimation,
+                shouldReducePerformance ? reducedAnimation : normalAnimation,
                 value: animatedValue
             )
     }
@@ -55,15 +59,16 @@ public struct AdaptiveAnimation<V: Equatable>: ViewModifier {
 
 extension View {
 
-    /// Applies adaptive animations based on Low Power Mode state.
+    /// Applies adaptive animations based on device power state.
     ///
-    /// When Low Power Mode is enabled, the view uses a reduced animation.
-    /// Otherwise, it uses the normal animation.
+    /// When the device is under power constraints (Low Power Mode, thermal pressure,
+    /// or low battery), the view uses a reduced animation. Otherwise, it uses the
+    /// normal animation.
     ///
     /// - Parameters:
     ///   - normal: The animation to use during normal operation. Defaults to `.spring()`.
-    ///   - reduced: The animation to use during Low Power Mode. Defaults to `.linear(duration: 0.2)`.
-    ///     Pass `nil` to disable animation entirely.
+    ///   - reduced: The animation to use when performance should be reduced.
+    ///     Defaults to `.linear(duration: 0.2)`. Pass `nil` to disable animation entirely.
     ///   - value: The value to observe for animation triggers.
     ///
     /// - Returns: A view with adaptive animation behaviour.

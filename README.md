@@ -17,9 +17,10 @@ It solves the challenge of making iOS apps battery-conscious by offering:
 
 - An observable `PowerModeMonitor` for tracking power states
 - Reactive SwiftUI environment integration
-- Adaptive animation and visual effect modifiers
+- Adaptive animation and visual effect view modifiers
 - Thermal state monitoring
 - Battery level tracking (iOS only)
+- Built-in logging via [SimpleLogger](https://github.com/markbattistella/SimpleLogger)
 
 The goal is to provide a lightweight, well-documented way to make your SwiftUI apps respectful of device constraints without boilerplate.
 
@@ -119,7 +120,7 @@ struct ContentView: View {
 
 ### Adaptive Animations
 
-Automatically reduce animations when Low Power Mode is enabled:
+Automatically reduce animations when the device is under power constraints:
 
 ```swift
 struct AnimatedView: View {
@@ -148,51 +149,34 @@ Circle()
     )
 ```
 
-### Adaptive Visual Effects
+### Adaptive Content
 
-Reduce expensive visual effects during Low Power Mode:
+Use `AdaptivePowerContent` to switch between two content variants based on power state. It works anywhere — inline, as a background, as an overlay:
 
 ```swift
-struct BackgroundView: View {
-    var body: some View {
-        VStack {
-            Text("Content")
-        }
-        .adaptivePowerMode(
-            normalContent: {
-                Color.clear.background(.ultraThinMaterial)
-            },
-            reducedContent: {
-                Color.gray.opacity(0.2)
-            }
+// As a background
+Text("Content")
+    .background {
+        AdaptivePowerContent(
+            normal: { Color.clear.background(.ultraThinMaterial) },
+            reduced: { Color.gray.opacity(0.2) }
         )
     }
-}
-```
 
-### Power Mode Indicator
-
-Show users when your app is being battery-conscious:
-
-```swift
-struct DashboardView: View {
-    var body: some View {
-        VStack {
-            PowerModeIndicator()
-
-            // Your content
-        }
-    }
-}
-```
-
-Custom message:
-
-```swift
-PowerModeIndicator(
-    message: "Battery Saver Active",
-    showIcon: true
+// As inline content
+AdaptivePowerContent(
+    normal: { FancyAnimatedChart() },
+    reduced: { StaticChart() }
 )
+
+// As an overlay
+Image("photo")
+    .overlay {
+        AdaptivePowerContent(
+            normal: { GlowEffect() },
+            reduced: { EmptyView() }
+        )
+    }
 ```
 
 ### Advanced Power Monitoring
