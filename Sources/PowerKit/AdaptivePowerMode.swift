@@ -78,4 +78,4 @@ public struct AdaptivePowerContent<NormalContent: View, ReducedContent: View>: V
             normalContent()
         }
     }
-}0
+}
