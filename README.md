@@ -30,11 +30,16 @@ Add `PowerKit` to your Swift project using Swift Package Manager.
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/markbattistella/PowerKit", from: "1.0.0")
+  .package(url: "https://github.com/markbattistella/PowerKit", from: "26.2.21")
 ]
 ```
 
 Alternatively, you can add `PowerKit` using Xcode by navigating to `File > Add Packages` and entering the package repository URL.
+
+## Requirements
+
+- Swift 6.0+
+- iOS 17.0+, macOS 14.0+, tvOS 17.0+, watchOS 10.0+, visionOS 1.0+
 
 ## Usage
 
