@@ -8,7 +8,7 @@ import Foundation
 import SimpleLogger
 
 #if canImport(UIKit)
-  import UIKit
+    import UIKit
 #endif
 
 /// A monitor that tracks device power state and thermal conditions.
@@ -40,177 +40,177 @@ import SimpleLogger
 @Observable
 public final class PowerModeMonitor {
 
-  // MARK: - Properties
+    // MARK: - Properties
 
-  @ObservationIgnored
-  private let logger = SimpleLogger(category: .package)
+    @ObservationIgnored
+    private let logger = SimpleLogger(category: .package)
 
-  /// Indicates whether Low Power Mode is currently enabled.
-  public private(set) var isLowPowerModeEnabled: Bool
+    /// Indicates whether Low Power Mode is currently enabled.
+    public private(set) var isLowPowerModeEnabled: Bool
 
-  /// The current thermal state of the device.
-  public private(set) var thermalState: ProcessInfo.ThermalState
+    /// The current thermal state of the device.
+    public private(set) var thermalState: ProcessInfo.ThermalState
 
-  /// Indicates whether the battery is in a low state (below 20%).
-  ///
-  /// Only available on iOS. Always `false` on other platforms.
-  public private(set) var isLowBatteryState: Bool = false
+    /// Indicates whether the battery is in a low state (below 20%).
+    ///
+    /// Only available on iOS. Always `false` on other platforms.
+    public private(set) var isLowBatteryState: Bool = false
 
-  // MARK: - Computed Properties
+    // MARK: - Computed Properties
 
-  /// Indicates whether the app should reduce performance-intensive operations.
-  ///
-  /// Returns `true` if any of the following conditions are met:
-  /// - Low Power Mode is enabled
-  /// - Thermal state is serious or critical
-  /// - Battery level is below 20% (iOS only)
-  public var shouldReducePerformance: Bool {
-    let isThermalConstrained = thermalState == .serious || thermalState == .critical
-    return isLowPowerModeEnabled || isThermalConstrained || isLowBatteryState
-  }
-
-  // MARK: - Initialisation
-
-  /// Creates a new power mode monitor.
-  ///
-  /// The monitor immediately begins observing system notifications for
-  /// power state changes, thermal state changes, and battery level changes.
-  public init() {
-    self.isLowPowerModeEnabled = ProcessInfo.processInfo.isLowPowerModeEnabled
-    self.thermalState = ProcessInfo.processInfo.thermalState
-
-    logger.info(
-      "PowerModeMonitor started — lowPower: \(self.isLowPowerModeEnabled), thermal: \(self.thermalState.label)"
-    )
-
-    NotificationCenter.default.addObserver(
-      self,
-      selector: #selector(powerStateDidChange),
-      name: Notification.Name.NSProcessInfoPowerStateDidChange,
-      object: nil
-    )
-
-    NotificationCenter.default.addObserver(
-      self,
-      selector: #selector(thermalStateDidChange),
-      name: ProcessInfo.thermalStateDidChangeNotification,
-      object: nil
-    )
-
-    #if os(iOS)
-      BatteryMonitoringSession.start()
-      NotificationCenter.default.addObserver(
-        self,
-        selector: #selector(batteryLevelDidChange),
-        name: UIDevice.batteryLevelDidChangeNotification,
-        object: nil
-      )
-      updateBatteryState()
-    #endif
-  }
-
-  // MARK: - Notification Handlers
-
-  // System power and thermal notifications are posted on a background queue, so
-  // these handlers must be `nonisolated` to avoid a main-actor isolation assertion
-  // when the `@objc` thunk runs off the main thread. All state mutation is hopped
-  // back onto the main actor.
-
-  @objc nonisolated private func powerStateDidChange() {
-    Task { @MainActor in
-      self.isLowPowerModeEnabled = ProcessInfo.processInfo.isLowPowerModeEnabled
-      self.logger.info(
-        "Low Power Mode changed: \(self.isLowPowerModeEnabled ? "enabled" : "disabled")")
-    }
-  }
-
-  @objc nonisolated private func thermalStateDidChange() {
-    Task { @MainActor in
-      self.thermalState = ProcessInfo.processInfo.thermalState
-      self.logger.info("Thermal state changed: \(self.thermalState.label)")
-    }
-  }
-
-  #if os(iOS)
-    @objc nonisolated private func batteryLevelDidChange() {
-      Task { @MainActor in
-        self.updateBatteryState()
-      }
+    /// Indicates whether the app should reduce performance-intensive operations.
+    ///
+    /// Returns `true` if any of the following conditions are met:
+    /// - Low Power Mode is enabled
+    /// - Thermal state is serious or critical
+    /// - Battery level is below 20% (iOS only)
+    public var shouldReducePerformance: Bool {
+        let isThermalConstrained = thermalState == .serious || thermalState == .critical
+        return isLowPowerModeEnabled || isThermalConstrained || isLowBatteryState
     }
 
-    private func updateBatteryState() {
-      let level = UIDevice.current.batteryLevel
-      let wasLow = isLowBatteryState
-      isLowBatteryState = level > 0 && level < 0.2
-      if isLowBatteryState != wasLow {
+    // MARK: - Initialisation
+
+    /// Creates a new power mode monitor.
+    ///
+    /// The monitor immediately begins observing system notifications for
+    /// power state changes, thermal state changes, and battery level changes.
+    public init() {
+        self.isLowPowerModeEnabled = ProcessInfo.processInfo.isLowPowerModeEnabled
+        self.thermalState = ProcessInfo.processInfo.thermalState
+
         logger.info(
-          "Battery state changed: \(self.isLowBatteryState ? "low" : "normal") (level: \(Int(level * 100))%)"
+            "PowerModeMonitor started — lowPower: \(self.isLowPowerModeEnabled), thermal: \(self.thermalState.label)"
         )
-      }
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(powerStateDidChange),
+            name: Notification.Name.NSProcessInfoPowerStateDidChange,
+            object: nil
+        )
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(thermalStateDidChange),
+            name: ProcessInfo.thermalStateDidChangeNotification,
+            object: nil
+        )
+
+        #if os(iOS)
+            BatteryMonitoringSession.start()
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(batteryLevelDidChange),
+                name: UIDevice.batteryLevelDidChangeNotification,
+                object: nil
+            )
+            updateBatteryState()
+        #endif
     }
-  #endif
 
-  // MARK: - Cleanup
+    // MARK: - Notification Handlers
 
-  deinit {
-    NotificationCenter.default.removeObserver(self)
+    // System power and thermal notifications are posted on a background queue, so
+    // these handlers must be `nonisolated` to avoid a main-actor isolation assertion
+    // when the `@objc` thunk runs off the main thread. All state mutation is hopped
+    // back onto the main actor.
+
+    @objc nonisolated private func powerStateDidChange() {
+        Task { @MainActor in
+            self.isLowPowerModeEnabled = ProcessInfo.processInfo.isLowPowerModeEnabled
+            self.logger.info(
+                "Low Power Mode changed: \(self.isLowPowerModeEnabled ? "enabled" : "disabled")")
+        }
+    }
+
+    @objc nonisolated private func thermalStateDidChange() {
+        Task { @MainActor in
+            self.thermalState = ProcessInfo.processInfo.thermalState
+            self.logger.info("Thermal state changed: \(self.thermalState.label)")
+        }
+    }
 
     #if os(iOS)
-      Task { @MainActor in
-        BatteryMonitoringSession.stop()
-      }
+        @objc nonisolated private func batteryLevelDidChange() {
+            Task { @MainActor in
+                self.updateBatteryState()
+            }
+        }
+
+        private func updateBatteryState() {
+            let level = UIDevice.current.batteryLevel
+            let wasLow = isLowBatteryState
+            isLowBatteryState = level > 0 && level < 0.2
+            if isLowBatteryState != wasLow {
+                logger.info(
+                    "Battery state changed: \(self.isLowBatteryState ? "low" : "normal") (level: \(Int(level * 100))%)"
+                )
+            }
+        }
     #endif
-  }
+
+    // MARK: - Cleanup
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+
+        #if os(iOS)
+            Task { @MainActor in
+                BatteryMonitoringSession.stop()
+            }
+        #endif
+    }
 }
 
 #if os(iOS)
-  @MainActor
-  private enum BatteryMonitoringSession {
+    @MainActor
+    private enum BatteryMonitoringSession {
 
-    private static var activeMonitorCount = 0
-    private static var wasEnabledBeforeFirstMonitor = false
+        private static var activeMonitorCount = 0
+        private static var wasEnabledBeforeFirstMonitor = false
 
-    static func start() {
-      if activeMonitorCount == 0 {
-        wasEnabledBeforeFirstMonitor = UIDevice.current.isBatteryMonitoringEnabled
-        UIDevice.current.isBatteryMonitoringEnabled = true
-      }
+        static func start() {
+            if activeMonitorCount == 0 {
+                wasEnabledBeforeFirstMonitor = UIDevice.current.isBatteryMonitoringEnabled
+                UIDevice.current.isBatteryMonitoringEnabled = true
+            }
 
-      activeMonitorCount += 1
+            activeMonitorCount += 1
+        }
+
+        static func stop() {
+            guard activeMonitorCount > 0 else {
+                return
+            }
+
+            activeMonitorCount -= 1
+
+            if activeMonitorCount == 0 {
+                UIDevice.current.isBatteryMonitoringEnabled = wasEnabledBeforeFirstMonitor
+            }
+        }
     }
-
-    static func stop() {
-      guard activeMonitorCount > 0 else {
-        return
-      }
-
-      activeMonitorCount -= 1
-
-      if activeMonitorCount == 0 {
-        UIDevice.current.isBatteryMonitoringEnabled = wasEnabledBeforeFirstMonitor
-      }
-    }
-  }
 #endif
 
 /// Provides a human-readable label for each thermal state, used for logging output.
 extension ProcessInfo.ThermalState {
 
-  /// A short, human-readable description of the thermal state.
-  fileprivate var label: String {
-    switch self {
-    case .nominal: "nominal"
-    case .fair: "fair"
-    case .serious: "serious"
-    case .critical: "critical"
-    @unknown default: "unknown"
+    /// A short, human-readable description of the thermal state.
+    fileprivate var label: String {
+        switch self {
+        case .nominal: "nominal"
+        case .fair: "fair"
+        case .serious: "serious"
+        case .critical: "critical"
+        @unknown default: "unknown"
+        }
     }
-  }
 }
 
 /// Defines the logging category used by PowerKit.
 extension LoggerCategory {
 
-  /// The shared logging category for all PowerKit log output.
-  fileprivate static let package = LoggerCategory("Package.PowerKit")
+    /// The shared logging category for all PowerKit log output.
+    fileprivate static let package = LoggerCategory("Package.PowerKit")
 }
