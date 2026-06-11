@@ -111,19 +111,31 @@ public final class PowerModeMonitor {
 
   // MARK: - Notification Handlers
 
-  @objc private func powerStateDidChange() {
-    isLowPowerModeEnabled = ProcessInfo.processInfo.isLowPowerModeEnabled
-    logger.info("Low Power Mode changed: \(self.isLowPowerModeEnabled ? "enabled" : "disabled")")
+  // System power and thermal notifications are posted on a background queue, so
+  // these handlers must be `nonisolated` to avoid a main-actor isolation assertion
+  // when the `@objc` thunk runs off the main thread. All state mutation is hopped
+  // back onto the main actor.
+
+  @objc nonisolated private func powerStateDidChange() {
+    Task { @MainActor in
+      self.isLowPowerModeEnabled = ProcessInfo.processInfo.isLowPowerModeEnabled
+      self.logger.info(
+        "Low Power Mode changed: \(self.isLowPowerModeEnabled ? "enabled" : "disabled")")
+    }
   }
 
-  @objc private func thermalStateDidChange() {
-    thermalState = ProcessInfo.processInfo.thermalState
-    logger.info("Thermal state changed: \(self.thermalState.label)")
+  @objc nonisolated private func thermalStateDidChange() {
+    Task { @MainActor in
+      self.thermalState = ProcessInfo.processInfo.thermalState
+      self.logger.info("Thermal state changed: \(self.thermalState.label)")
+    }
   }
 
   #if os(iOS)
-    @objc private func batteryLevelDidChange() {
-      updateBatteryState()
+    @objc nonisolated private func batteryLevelDidChange() {
+      Task { @MainActor in
+        self.updateBatteryState()
+      }
     }
 
     private func updateBatteryState() {
